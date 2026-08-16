@@ -1,0 +1,943 @@
+:root {
+  --bg: #01010e;
+  --white: #ffffff;
+  --muted: #767676;
+  --track: #32214b;
+  --panel: #100d19;
+  --gradient: linear-gradient(100deg, #00b1f6 0%, #9f16ef 100%);
+  --logo-gradient: radial-gradient(circle at 61% 117%, #f9f4a6 0%, #e41aa9 35%, #00b1f6 65%, #f9f4a6 100%);
+  --font: "Proxima Nova", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --container: 1920px;
+  --gutter: clamp(24px, 6vw, 120px);
+  --hero-inset: 20.1vw;
+  --hero-img-w: 79.9vw;
+  --hero-img-h: 67vh;
+  --hero-top-gap: 12px;
+  --muted-purple: #511c77;
+  --nav-height: 110px;
+  /* Section vertical rhythm: tablet = 50% of desktop, mobile = 30% of desktop,
+     matching the exact ratio Figma uses for the showcase gap (80/40/24). */
+  --section-pad-y: 96px;
+  --stories-pad-y: 120px;
+  /* Shared by Showcase + Socialize: Figma has both at 80px/40px/24px (desktop/tablet/mobile). */
+  --section-gap: 80px;
+  /* Showcase heading-to-paragraph gap: Figma has this at 40px/24px/12px (desktop/tablet/mobile). */
+  --header-gap: 40px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; background: var(--bg); overflow-y: scroll; }
+
+body {
+  position: relative;
+  margin: 0;
+  color: var(--white);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.hero__aurora {
+  /* Positioned at the body level (not inside .hero) and pulled behind the
+     page's normal-flow content via negative z-index, so it starts at the
+     true top of the page and shows through the nav's transparent
+     background too — .nav sits in normal flow *above* .hero, so an aurora
+     scoped to .hero alone could never reach that space no matter how its
+     own fade was tuned. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* Static fallback in case WebGL is unavailable/fails: three soft glows
+     anchored at the top edge, each fading out within its own radius —
+     mirrors the shader's top-concentrated look instead of a flat block. */
+  background:
+    radial-gradient(85% 75% at 15% 0%, rgba(59, 0, 66, 0.30), transparent 78%),
+    radial-gradient(80% 70% at 55% 0%, rgba(36, 66, 90, 0.24), transparent 78%),
+    radial-gradient(80% 70% at 92% 0%, rgba(15, 0, 67, 0.30), transparent 78%);
+  /* No fade-in — color starts immediately at the very top, right against the
+     nav, with no black gap. Fades out toward the bottom so it still blends
+     seamlessly into the page background there. */
+  mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 78%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 55%, transparent 78%);
+}
+
+@media (max-width: 640px) {
+  /* Same idea as the shader's left-anchored color ramp: on a narrow
+     screen, skew the three glows toward the left edge instead of
+     spreading all three evenly, so mobile reads as a slice of the same
+     gradient rather than the whole thing rushed into a small width. */
+  .hero__aurora {
+    background:
+      radial-gradient(80% 72% at 0% 0%, rgba(59, 0, 66, 0.30), transparent 78%),
+      radial-gradient(75% 68% at 25% 0%, rgba(36, 66, 90, 0.24), transparent 78%),
+      radial-gradient(70% 65% at 55% 0%, rgba(15, 0, 67, 0.24), transparent 78%);
+  }
+}
+
+.hero__aurora canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__aurora canvas { display: none; }
+  .btn-submit:hover::before { animation: none; }
+}
+
+@property --btn-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+img { max-width: 100%; display: block; }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h4, p { margin: 0; }
+
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+}
+
+h2 {
+  font-weight: 800;
+  font-size: clamp(34px, 4.6vw, 67px);
+  line-height: 0.955;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+h4 {
+  font-weight: 700;
+  font-size: clamp(28px, 3.4vw, 38px);
+  line-height: 1.2;
+}
+
+.body-l {
+  font-weight: 400;
+  font-size: clamp(16px, 1.5vw, 21px);
+  line-height: 1.7;
+  color: var(--white);
+}
+
+/* ---------- Scroll reveal ---------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+.btn-text {
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------- Nav ---------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px clamp(12px, 3vw, 64px) 24px clamp(12px, 1.5vw, 32px);
+  background: transparent;
+}
+
+.nav__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--panel);
+}
+
+.nav__logo img { width: 45px; height: auto; }
+
+.nav__right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 9px;
+  width: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.menu-toggle span {
+  display: block;
+  height: 1px;
+  border-radius: 1px;
+}
+
+.menu-toggle span:nth-child(1) { width: 40px; background: #0068e5; }
+.menu-toggle span:nth-child(2) { width: 30px; background: #00b1f6; }
+.menu-toggle span:nth-child(3) { width: 20px; background: #9f16ef; }
+
+/* ---------- Side nav ---------- */
+.side-nav {
+  position: fixed;
+  bottom: clamp(24px, 3vw, 64px);
+  right: clamp(24px, 3vw, 64px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-nav__item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 26px;
+  padding-right: 12px;
+  border-right: 1px solid transparent;
+  color: var(--muted-purple);
+  font-size: 16px;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.side-nav__item:hover {
+  color: #9f16ef;
+  border-right-color: #9f16ef;
+}
+
+.side-nav__item.is-active {
+  color: var(--white);
+  font-weight: 800;
+  border-right-color: var(--white);
+}
+
+@media (max-width: 1024px) {
+  .side-nav { display: none; }
+}
+
+/* ---------- Menu overlay ---------- */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-16px);
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s;
+}
+
+.menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-overlay__close {
+  position: absolute;
+  top: var(--menu-close-top, 24px);
+  left: var(--menu-close-left, auto);
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transform: scale(0.4) rotate(-90deg);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+
+.menu-overlay__close img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.menu-overlay.is-open .menu-overlay__close {
+  transform: scale(1) rotate(0deg);
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+.menu-overlay__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.menu-overlay__list a {
+  font-weight: 700;
+  font-size: clamp(24px, 4vw, 40px);
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.menu-overlay__list a:hover {
+  color: var(--white);
+}
+
+.menu-overlay__list a.is-active {
+  color: var(--white);
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.menu-overlay__list li {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.menu-overlay.is-open .menu-overlay__list li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.menu-overlay.is-open .menu-overlay__list li:nth-child(1) { transition-delay: 0.15s; }
+.menu-overlay.is-open .menu-overlay__list li:nth-child(2) { transition-delay: 0.2s; }
+.menu-overlay.is-open .menu-overlay__list li:nth-child(3) { transition-delay: 0.25s; }
+.menu-overlay.is-open .menu-overlay__list li:nth-child(4) { transition-delay: 0.3s; }
+.menu-overlay.is-open .menu-overlay__list li:nth-child(5) { transition-delay: 0.35s; }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  /* position:relative alone doesn't create a stacking context — without an
+     explicit z-index, this section's negative-z-index children (the image,
+     its scrim) aren't scoped to it and bubble up to compare directly
+     against the page-level aurora's own z-index, painting below it
+     regardless of DOM order. z-index:0 scopes them properly to this section. */
+  z-index: 0;
+  min-height: calc(100vh - var(--nav-height));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 14px;
+  overflow: hidden;
+}
+
+
+.hero__bg {
+  position: absolute;
+  top: var(--hero-top-gap);
+  left: 0;
+  width: var(--hero-img-w);
+  height: var(--hero-img-h);
+  object-fit: cover;
+  border-radius: 0 4px 4px 0;
+  z-index: -2;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  top: var(--hero-top-gap);
+  left: 0;
+  width: var(--hero-img-w);
+  height: var(--hero-img-h);
+  background: linear-gradient(180deg, rgba(1, 1, 14, 0.5) 0%, rgba(1, 1, 14, 0) 30%, rgba(1, 1, 14, 0.2) 100%);
+  /* This scrim sits above the aurora (z-index -3) too, not just the photo —
+     without a fade here, the aurora looks dimmed under the image and then
+     snaps to full brightness right at the image's edge. Soften that edge. */
+  mask-image: linear-gradient(to right, #000 0%, #000 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 80%, transparent 100%);
+  z-index: -1;
+}
+
+.hero__content {
+  position: absolute;
+  top: var(--hero-top-gap);
+  left: 0;
+  width: var(--hero-img-w);
+  height: var(--hero-img-h);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: clamp(12px, 4vw, 40px);
+  padding: 0 48px 48px 48px;
+}
+
+.hero__content h1 {
+  max-width: 1100px;
+  font-weight: 800;
+  font-size: clamp(44px, 5vw, 90px);
+  line-height: 0.9;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+.hero__content .body-l {
+  max-width: 900px;
+}
+
+@media (min-width: 1025px) {
+  .hero__content {
+    gap: 20px;
+  }
+}
+
+.hero__explore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero__explore span {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.hero__arrow {
+  width: 2px;
+  height: 64px;
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(10px); opacity: 0.5; }
+}
+
+/* ---------- Stories ---------- */
+.stories {
+  padding: var(--stories-pad-y) var(--gutter);
+}
+
+.stories .container {
+  max-width: 1152px;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+.trailer {
+  position: relative;
+}
+
+.trailer__video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1160 / 652;
+  border-radius: 4px;
+  object-fit: cover;
+  /* Anchored to the bottom so the zoom only grows upward, away from the
+     text-grid below instead of crossing over it. */
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.text-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 48px;
+}
+
+.text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---------- Showcase ---------- */
+.showcase {
+  padding: var(--section-pad-y) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+}
+
+.showcase__header {
+  padding: 0 clamp(24px, 14vw, 272px) 0 clamp(24px, 20vw, 392px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--header-gap);
+}
+
+@media (min-width: 1600px) {
+  /* Match the trailer image's own cap+centering (.stories .container) on
+     very wide screens: 1600px is where the text's natural (uncapped) width
+     first overtakes the trailer's, so below that the asymmetric padding
+     stays untouched. Above it, drop that padding and center the same
+     1152px column the trailer uses, instead of leaving it left-anchored. */
+  .showcase__header {
+    padding: 0;
+    max-width: 1152px;
+    margin-inline: auto;
+  }
+}
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slider__viewport {
+  position: relative;
+}
+
+.slider__drag-hint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 97px;
+  height: 98px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 5;
+}
+
+.slider__drag-hint.is-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.slider__drag-hint.is-visible.is-dragging {
+  transform: translate(-50%, -50%) scale(0.82);
+  transition-duration: 0.15s;
+}
+
+.slider__drag-hint img { width: 100%; height: 100%; display: block; }
+
+.slider__track {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.slider__track::-webkit-scrollbar { display: none; }
+
+.slider__track.is-dragging {
+  cursor: grabbing;
+}
+
+.slider__track.is-dragging img { pointer-events: none; }
+
+.slider__spacer {
+  flex: 0 0 calc(clamp(24px, 6vw, 272px) - 12px);
+}
+
+.slider__item {
+  flex: 0 0 auto;
+  height: clamp(280px, 34vw, 596px);
+}
+
+.slider__item img { height: 100%; width: auto; max-width: none; border-radius: 4px; }
+
+.scrub-track {
+  margin-left: clamp(24px, 6vw, 272px);
+  margin-right: var(--gutter);
+  height: 2px;
+  background: var(--track);
+  border-radius: 2px;
+  position: relative;
+}
+
+.scrub-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: clamp(120px, 20vw, 384px);
+  background: var(--gradient);
+  border-radius: 2px;
+  transition: left 0.15s ease-out, width 0.2s ease;
+}
+
+/* ---------- Socialize ---------- */
+.socialize {
+  padding: var(--section-pad-y) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap);
+}
+
+.socialize__header {
+  padding: 0 clamp(24px, 16vw, 312px) 0 clamp(24px, 20vw, 392px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.socialize__header h2 { flex: 1 1 400px; max-width: 560px; }
+.socialize__header p { flex: 1 1 400px; max-width: 530px; }
+
+@media (min-width: 1600px) {
+  /* Match the trailer image's own cap+centering (.stories .container) on
+     very wide screens: 1600px is where the natural (uncapped) width first
+     overtakes the trailer's, give or take a few px vs. showcase's own
+     crossover. Above it, drop the asymmetric padding and center the same
+     1152px row the trailer uses, instead of leaving it left-anchored. */
+  .socialize__header {
+    padding: 0;
+    max-width: 1152px;
+    margin-inline: auto;
+  }
+}
+
+.socialize__image {
+  padding: 0 clamp(24px, 14vw, 272px);
+}
+
+.socialize__image img {
+  width: 100%;
+  /* Rendered width of this image at a 1920px desktop viewport — stop
+     growing past that on larger screens instead of continuing to scale up. */
+  max-width: 1372px;
+  display: block;
+  margin-inline: auto;
+  border-radius: 4px;
+}
+
+/* ---------- Features ---------- */
+.features { padding: clamp(24px, 4vw, 80px) 0 var(--section-pad-y); }
+
+.feature-card {
+  position: relative;
+  flex: 0 0 auto;
+  height: clamp(320px, 40vw, 763px);
+  width: clamp(280px, 36vw, 692px);
+}
+
+.feature-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover img,
+.feature-card:focus-within img {
+  opacity: 0.6;
+}
+
+.feature-card__label {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 0 24px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feature-card__title {
+  font-weight: 800;
+  font-size: 22px;
+  text-transform: uppercase;
+}
+
+.feature-card__desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 42ch;
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease;
+}
+
+.feature-card:hover .feature-card__desc,
+.feature-card:focus-within .feature-card__desc {
+  opacity: 1;
+  max-height: 240px;
+  margin-top: 12px;
+}
+
+/* ---------- Commission ---------- */
+.commission {
+  padding: var(--section-pad-y) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px 80px;
+}
+
+.commission__image { flex: 1 1 480px; }
+.commission__image img { width: 100%; border-radius: 4px; }
+
+.commission .text-block { flex: 1 1 400px; max-width: 530px; gap: 24px; }
+
+@media (min-width: 1025px) {
+  .commission__image {
+    max-width: 50%;
+  }
+}
+
+@media (min-width: 1921px) {
+  /* Freeze the section at its rendered size on a 1920px desktop instead of
+     continuing to scale up. 1676.4px is the flex row's content-box width
+     there (section width minus its own left/right gutter padding); adding
+     the gutter back via calc keeps that content width fixed regardless of
+     how wide the gutter itself grows, and everything inside (the image's
+     50%, the text-block's own fixed max-width) scales off this frozen
+     container, so it freezes automatically along with it. */
+  .commission {
+    max-width: calc(1676.4px + 2 * var(--gutter));
+    margin-inline: auto;
+  }
+}
+
+/* ---------- Demo ---------- */
+.demo {
+  padding: var(--section-pad-y) var(--gutter);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px 160px;
+}
+
+.demo__copy {
+  flex: 1 1 400px;
+  max-width: 574px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.demo__form {
+  flex: 1 1 360px;
+  max-width: 451px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.fields-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.field {
+  position: relative;
+  padding: 20px 0 8px;
+  /* box-shadow renders a true sub-pixel hairline; a border-bottom this thin
+     gets rounded up to a full 1px on standard-density displays. */
+  box-shadow: 0 0.5px 0 0 var(--white);
+  transition: box-shadow 0.2s ease;
+}
+
+.field:hover { box-shadow: 0 0.5px 0 0 #999999; }
+.field:focus-within { box-shadow: 0 0.5px 0 0 #9f16ef; }
+
+.field label {
+  position: absolute;
+  left: 0;
+  top: 20px;
+  font-size: 16px;
+  color: var(--white);
+  pointer-events: none;
+  transition: top 0.18s ease, font-size 0.18s ease;
+}
+
+.field input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 16px;
+  padding: 20px 0 0;
+}
+
+/* Override the browser's forced autofill background so it matches the dark
+   theme instead of the default light box; the huge transition delay is the
+   standard trick to stop WebKit swapping it back in after paint. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--white);
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg) inset;
+  box-shadow: 0 0 0px 1000px var(--bg) inset;
+  caret-color: var(--white);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  top: 0;
+  font-size: 10px;
+}
+
+.btn-submit {
+  position: relative;
+  align-self: stretch;
+  padding: 20px 0;
+  border-radius: 73px;
+  border: none;
+  background: none;
+  color: var(--white);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.btn-submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 73px;
+  padding: 1px;
+  background: conic-gradient(from var(--btn-angle, 0deg), #9f16ef, #00b1f6, #9f16ef);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.btn-submit:hover {
+  opacity: 1;
+  transform: scale(1.015);
+  box-shadow: 0 0 24px -8px rgba(159, 22, 239, 0.55), 0 0 24px -8px rgba(0, 177, 246, 0.4);
+}
+
+.btn-submit:hover::before {
+  animation: btn-stroke-spin 2.2s linear infinite;
+}
+
+@keyframes btn-stroke-spin {
+  to { --btn-angle: 360deg; }
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: calc(1185px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 48px var(--gutter);
+  gap: 24px;
+}
+
+.footer__logo { width: 58px; height: auto; }
+
+.footer p {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  :root {
+    --hero-img-w: 90.5vw;
+    --hero-img-h: 63vh;
+    --hero-top-gap: 48px;
+    /* Tablet = 50% of desktop, matching Figma's showcase/socialize gap ratio (40px of 80px). */
+    --section-pad-y: 48px;
+    --stories-pad-y: 60px;
+    --section-gap: 40px;
+    --header-gap: 24px;
+  }
+  .text-grid { grid-template-columns: 1fr; }
+  .demo__copy,
+  .demo__form {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .commission {
+    flex-direction: column;
+    row-gap: 40px;
+  }
+  .commission__image,
+  .commission .text-block {
+    flex: 0 1 auto;
+  }
+  .socialize__header {
+    flex-direction: column;
+  }
+  .socialize__header h2,
+  .socialize__header p {
+    flex: 0 1 auto;
+  }
+}
+
+/* Tablet only: text-block is narrower than the image (max-width: 530px), so
+   centering (the default at <=1024px) leaves it inset from the image's left
+   edge. Left-align them instead. Mobile already matches without this since
+   the text-block fills the full width there. */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .commission { align-items: flex-start; }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --hero-top-gap: 12px;
+    /* Mobile = 30% of desktop, matching Figma's showcase/socialize gap ratio (24px of 80px). */
+    --section-pad-y: 29px;
+    --stories-pad-y: 36px;
+    --section-gap: 24px;
+    --header-gap: 12px;
+  }
+  .showcase__header, .socialize__header { padding: 0 20px; }
+  .socialize__image, .scrub-track { margin: 0; padding: 0 20px; }
+  .footer { flex-direction: column; text-align: center; }
+}

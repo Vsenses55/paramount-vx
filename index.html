@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VX &mdash; Paramount Metaverse Platform</title>
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div class="hero__aurora" data-aurora aria-hidden="true"></div>
+
+<header class="nav" id="nav">
+  <a href="#top" class="nav__logo" aria-label="VX Home">
+    <img src="assets/icons/logo.svg" alt="VX logo" width="45" height="39">
+  </a>
+  <div class="nav__right">
+    <a class="btn-text" href="#demo">REQUEST A DEMO</a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="menuOverlay">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<nav class="side-nav" id="sideNav" aria-label="Section navigation">
+  <a href="#top" class="side-nav__item is-active" data-target="hero">VX Platform</a>
+  <a href="#showcase" class="side-nav__item" data-target="showcase">Customize</a>
+  <a href="#socialize" class="side-nav__item" data-target="socialize">Socialize</a>
+  <a href="#stories" class="side-nav__item" data-target="stories">Showtime</a>
+  <a href="#commission" class="side-nav__item" data-target="commission">Commission</a>
+</nav>
+
+<nav class="menu-overlay" id="menuOverlay" aria-hidden="true">
+  <button class="menu-overlay__close" id="menuClose" aria-label="Close menu">
+    <img src="assets/icons/menu-close.svg" alt="" width="30" height="30">
+  </button>
+  <ul class="menu-overlay__list">
+    <li><a href="#top" class="is-active">VX Platform</a></li>
+    <li><a href="#showcase">Customize</a></li>
+    <li><a href="#socialize">Socialize</a></li>
+    <li><a href="#stories">Showtime</a></li>
+    <li><a href="#commission">Commission</a></li>
+  </ul>
+</nav>
+
+<main id="top">
+
+  <section class="hero" id="hero">
+    <img class="hero__bg" src="assets/images/hero-bg.png" alt="" role="presentation">
+    <div class="hero__content">
+      <h1 data-reveal>AN IMMERSIVE VIRTUAL EVENT PLATFORM.</h1>
+      <p class="body-l" data-reveal data-reveal-delay="150">If you can imagine it, we can create it. With a fully customizable experience, your event can take place wherever you want. From monsters coming alive to swimming underwater, where do you want your event to take place?</p>
+    </div>
+    <a href="#stories" class="hero__explore">
+      <span>EXPLORE VX</span>
+      <img src="assets/icons/explore-arrow.svg" alt="" class="hero__arrow">
+    </a>
+  </section>
+
+  <section class="stories" id="stories">
+    <div class="container">
+      <div class="trailer" data-reveal>
+        <video
+          class="trailer__video"
+          src="assets/videos/trailer.mp4"
+          poster="assets/images/trailer-56586a.png"
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-label="VX trailer"
+        ></video>
+      </div>
+      <div class="text-grid">
+        <div class="text-block" data-reveal>
+          <h4>Tell stories.</h4>
+          <p class="body-l">Think of the experience as if it was a live play with a story that unfolds all around you. The difference is, you are taking center stage.</p>
+        </div>
+        <div class="text-block" data-reveal data-reveal-delay="150">
+          <h4>We&rsquo;ll do it live.</h4>
+          <p class="body-l">Not only can we share the latest trailers and announcements, but we can also connect fans with their favorite pop culture icons in real time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="showcase" id="showcase">
+    <div class="showcase__header" data-reveal>
+      <h2>A FULLY<br>CUSTOMIZABLE<br>3D ENVIRONMENT</h2>
+      <p class="body-l">VX is a metaverse platform that allows for environments to be completely yours. Your metaverse can include whatever, and however many, scenes you want. Scenes can be virtual recreations of real-life locations, or completely fictional worlds.</p>
+    </div>
+    <div class="slider" data-slider data-reveal data-reveal-delay="150">
+      <div class="slider__viewport">
+        <div class="slider__track" data-slider-track>
+          <div class="slider__spacer"></div>
+          <div class="slider__item"><img src="assets/images/showcase-3d-1-56586a.png" alt="Custom 3D environment example 1"></div>
+          <div class="slider__item"><img src="assets/images/showcase-3d-2.png" alt="Custom 3D environment example 2"></div>
+          <div class="slider__item"><img src="assets/images/showcase-3d-3.png" alt="Custom 3D environment example 3"></div>
+          <div class="slider__item"><img src="assets/images/showcase-3d-4.png" alt="Custom 3D environment example 4"></div>
+        </div>
+        <div class="slider__drag-hint" data-drag-hint aria-hidden="true">
+          <img src="assets/icons/drag-hint.svg" alt="" width="97" height="98">
+        </div>
+      </div>
+      <div class="scrub-track"><div class="scrub-thumb" data-scrub></div></div>
+    </div>
+  </section>
+
+  <section class="socialize" id="socialize">
+    <div class="socialize__header" data-reveal>
+      <h2>CATCH UP WITH FRIENDS AND COLLEAGUES</h2>
+      <p class="body-l">When you enter VX, you enter a new world. Connect with others in the 3D space through a variety of integrated communication features that can be turned on or off to fit your needs.</p>
+    </div>
+    <div class="socialize__image" data-reveal data-reveal-delay="150">
+      <img src="assets/images/socialize-56586a.png" alt="Friends socializing inside the VX metaverse">
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="slider" data-slider data-reveal>
+      <div class="slider__viewport">
+        <div class="slider__track" data-slider-track>
+          <div class="slider__spacer"></div>
+          <div class="feature-card">
+            <img src="assets/images/feature-1.png" alt="VX feature preview 1">
+            <div class="feature-card__label">
+              <span class="feature-card__title">Proximity Audio</span>
+              <p class="feature-card__desc">Using your device's microphone, users can talk to others within close proximity - just like in real life.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="assets/images/feature-2.png" alt="VX feature preview 2">
+            <div class="feature-card__label">
+              <span class="feature-card__title">Global and Direct Chat</span>
+              <p class="feature-card__desc">Users can message all event attendees with global chat, or have a private conversations with individuals or smaller groups with direct chat.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="assets/images/feature-3.png" alt="VX feature preview 3">
+            <div class="feature-card__label">
+              <span class="feature-card__title">Video Calls</span>
+              <p class="feature-card__desc">Users can connect face-to-face with video calls.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="assets/images/feature-4.png" alt="VX feature preview 4">
+            <div class="feature-card__label">
+              <span class="feature-card__title">Emojis</span>
+              <p class="feature-card__desc">To express their excitement, users can react with 3D emojis.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <img src="assets/images/feature-5.png" alt="VX feature preview 5">
+            <div class="feature-card__label">
+              <span class="feature-card__title">Q&amp;A</span>
+            </div>
+          </div>
+        </div>
+        <div class="slider__drag-hint" data-drag-hint aria-hidden="true">
+          <img src="assets/icons/drag-hint.svg" alt="" width="97" height="98">
+        </div>
+      </div>
+      <div class="scrub-track"><div class="scrub-thumb" data-scrub></div></div>
+    </div>
+  </section>
+
+  <section class="commission" id="commission">
+    <div class="commission__image" data-reveal>
+      <img src="assets/images/rent-space-56586a.png" alt="A commissioned VX metaverse space">
+    </div>
+    <div class="text-block" data-reveal data-reveal-delay="150">
+      <h2>COMMISSION A VX METAVERSE</h2>
+      <p class="body-l">When you enter VX, you enter a new world. Connect with others in the 3D space through a variety of integrated communication features that can be turned on or off to fit your needs.</p>
+    </div>
+  </section>
+
+  <section class="demo" id="demo">
+    <div class="demo__copy" data-reveal>
+      <h4>Request a Demo</h4>
+      <p class="body-l">Interested in learning more about VX? Ready to build your metaverse? Contact us today to setup a demo.</p>
+    </div>
+    <form class="demo__form" id="demoForm" data-reveal data-reveal-delay="150">
+      <div class="fields-wrap">
+        <div class="field">
+          <input type="text" id="name" name="name" placeholder=" " required>
+          <label for="name">Name</label>
+        </div>
+        <div class="field">
+          <input type="email" id="email" name="email" placeholder=" " required>
+          <label for="email">Email</label>
+        </div>
+        <div class="field">
+          <input type="text" id="company" name="company" placeholder=" ">
+          <label for="company">Company</label>
+        </div>
+        <div class="field">
+          <input type="tel" id="phone" name="phone" placeholder=" ">
+          <label for="phone">Phone Number</label>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">SUBMIT</button>
+    </form>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <img src="assets/icons/logo.svg" alt="VX logo" width="58" height="51" class="footer__logo">
+  <p>&copy; 2021 PXL/VX. All Rights Reserved.</p>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script type="module" src="assets/js/aurora.js"></script>
+</body>
+</html>

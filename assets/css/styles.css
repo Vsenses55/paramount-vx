@@ -204,11 +204,19 @@ h4 {
   display: block;
   height: 1px;
   border-radius: 1px;
+  transition: width 0.4s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.menu-toggle span:nth-child(1) { width: 40px; background: #0068e5; }
-.menu-toggle span:nth-child(2) { width: 30px; background: #00b1f6; }
-.menu-toggle span:nth-child(3) { width: 20px; background: #9f16ef; }
+.menu-toggle span:nth-child(1) { width: 40px; background: #0068e5; transition-delay: 0.08s; }
+.menu-toggle span:nth-child(2) { width: 30px; background: #00b1f6; transition-delay: 0.04s; }
+.menu-toggle span:nth-child(3) { width: 20px; background: #9f16ef; transition-delay: 0s; }
+
+/* Flip the staircase on hover — same three bars, lengths swap order
+   (right-aligned, so they grow/shrink from the left) with a slight
+   stagger for a bit of cascading motion instead of a flat swap. */
+.menu-toggle:hover span:nth-child(1) { width: 20px; transition-delay: 0s; }
+.menu-toggle:hover span:nth-child(2) { width: 34px; transition-delay: 0.04s; }
+.menu-toggle:hover span:nth-child(3) { width: 40px; transition-delay: 0.08s; }
 
 /* ---------- Side nav ---------- */
 .side-nav {

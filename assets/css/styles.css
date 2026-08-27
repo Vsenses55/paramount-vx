@@ -6,7 +6,7 @@
   --panel: #100d19;
   --gradient: linear-gradient(100deg, #00b1f6 0%, #9f16ef 100%);
   --logo-gradient: radial-gradient(circle at 61% 117%, #f9f4a6 0%, #e41aa9 35%, #00b1f6 65%, #f9f4a6 100%);
-  --font: "Proxima Nova", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font: "proxima-nova", "Inter", "Helvetica Neue", Arial, sans-serif;
   --container: 1920px;
   --gutter: clamp(24px, 6vw, 120px);
   --hero-inset: 20.1vw;

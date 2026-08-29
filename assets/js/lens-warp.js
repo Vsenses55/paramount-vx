@@ -148,13 +148,7 @@ function initLensWarp(imgEl, opts) {
 
 var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!prefersReducedMotion) {
-  var lensWarpTargets = [
-    '.showcase .slider__item img',
-    '.features .feature-card img',
-    '.socialize__image img',
-    '.commission__image img'
-  ].join(', ');
-  document.querySelectorAll(lensWarpTargets).forEach(function (img) {
+  document.querySelectorAll('.showcase .slider__item img').forEach(function (img) {
     initLensWarp(img);
   });
 }

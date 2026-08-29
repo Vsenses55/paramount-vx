@@ -56,21 +56,6 @@ function initLensWarp(imgEl, opts) {
   canvas.setAttribute('aria-hidden', 'true');
 
   var texture = new Texture(gl);
-  var srcImage = new Image();
-  srcImage.crossOrigin = 'anonymous';
-  function onImageReady() {
-    texture.image = srcImage;
-    resize();
-  }
-  if (imgEl.complete && imgEl.naturalWidth) {
-    srcImage.src = imgEl.currentSrc || imgEl.src;
-    if (srcImage.complete) onImageReady();
-    else srcImage.onload = onImageReady;
-  } else {
-    srcImage.onload = onImageReady;
-    srcImage.src = imgEl.currentSrc || imgEl.src;
-  }
-
   var geometry = new Triangle(gl);
 
   var program = new Program(gl, {
@@ -89,15 +74,34 @@ function initLensWarp(imgEl, opts) {
 
   var computedPosition = getComputedStyle(wrapper).position;
   if (computedPosition === 'static') wrapper.style.position = 'relative';
-  wrapper.appendChild(canvas);
+  // Insert right after the <img> rather than appending last, so any sibling
+  // content that should stay on top (e.g. feature-card's text label) does.
+  imgEl.insertAdjacentElement('afterend', canvas);
 
+  var imageIsReady = false;
   function resize() {
     var rect = wrapper.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
     renderer.setSize(rect.width, rect.height);
+    if (imageIsReady) renderer.render({ scene: mesh });
   }
   window.addEventListener('resize', resize);
   resize();
+
+  // Render one frame as soon as the texture is ready, so the canvas already
+  // holds a valid (undistorted) image the instant hover flips it visible —
+  // otherwise the first hover shows a blank flash while waiting for the
+  // hover-driven render loop to catch up.
+  var srcImage = new Image();
+  srcImage.crossOrigin = 'anonymous';
+  function onImageReady() {
+    texture.image = srcImage;
+    imageIsReady = true;
+    resize(); // sizes the canvas and, since imageIsReady is now true, renders it too
+  }
+  srcImage.src = imgEl.currentSrc || imgEl.src;
+  if (srcImage.complete) onImageReady();
+  else srcImage.onload = onImageReady;
 
   var targetHover = 0;
   var currentHover = 0;
@@ -144,7 +148,13 @@ function initLensWarp(imgEl, opts) {
 
 var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!prefersReducedMotion) {
-  document.querySelectorAll('.showcase .slider__item img').forEach(function (img) {
+  var lensWarpTargets = [
+    '.showcase .slider__item img',
+    '.features .feature-card img',
+    '.socialize__image img',
+    '.commission__image img'
+  ].join(', ');
+  document.querySelectorAll(lensWarpTargets).forEach(function (img) {
     initLensWarp(img);
   });
 }

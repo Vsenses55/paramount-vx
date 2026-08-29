@@ -568,9 +568,19 @@ h4 {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  /* Without this, iOS Safari claims a horizontal finger-drag as its own
+     native scroll gesture and fires pointercancel before our drag-to-scroll
+     JS ever gets a chance to run. pan-y still lets vertical page scroll
+     (e.g. starting a drag slightly off-axis) pass through normally. */
+  touch-action: pan-y;
 }
 
 .slider__track::-webkit-scrollbar { display: none; }
+
+.slider__track img {
+  /* Stops iOS's long-press "save photo" callout from interrupting a drag. */
+  -webkit-touch-callout: none;
+}
 
 .slider__track.is-dragging {
   cursor: grabbing;
@@ -654,6 +664,7 @@ h4 {
   display: block;
   margin-inline: auto;
   border-radius: 4px;
+  will-change: transform;
 }
 
 /* ---------- Features ---------- */

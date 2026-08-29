@@ -196,6 +196,38 @@
     updateTrailerScale();
   }
 
+  var socializeImg = document.querySelector('.socialize__image img');
+  if (socializeImg) {
+    // Same idea as the trailer, inverted: starts smaller, rests at its
+    // normal (1x) size once centered, shrinks back as it scrolls away.
+    var SOCIALIZE_BASE_SCALE = 0.7;
+    var SOCIALIZE_MAX_SCALE = 1;
+    var socializeScaleTicking = false;
+
+    function updateSocializeScale() {
+      socializeScaleTicking = false;
+      var rect = socializeImg.getBoundingClientRect();
+      var viewportCenter = window.innerHeight / 2;
+      var elementCenter = rect.top + rect.height / 2;
+      var distance = Math.abs(viewportCenter - elementCenter);
+      var maxDistance = window.innerHeight / 2 + rect.height / 2;
+      var proximity = maxDistance > 0 ? Math.max(0, 1 - distance / maxDistance) : 0;
+      var scale = SOCIALIZE_BASE_SCALE + (SOCIALIZE_MAX_SCALE - SOCIALIZE_BASE_SCALE) * proximity;
+      socializeImg.style.transform = 'scale(' + scale.toFixed(3) + ')';
+    }
+
+    function requestSocializeScaleUpdate() {
+      if (!socializeScaleTicking) {
+        socializeScaleTicking = true;
+        requestAnimationFrame(updateSocializeScale);
+      }
+    }
+
+    document.addEventListener('scroll', requestSocializeScaleUpdate, { passive: true });
+    window.addEventListener('resize', requestSocializeScaleUpdate);
+    updateSocializeScale();
+  }
+
   var form = document.getElementById('demoForm');
   if (form) {
     form.addEventListener('submit', function (e) {

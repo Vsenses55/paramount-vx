@@ -46,14 +46,16 @@ function initLensWarp(imgEl, opts) {
   var gl = renderer.gl;
   var canvas = gl.canvas;
   canvas.style.position = 'absolute';
-  canvas.style.inset = '0';
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
   canvas.style.borderRadius = '4px';
   canvas.style.opacity = '0';
   canvas.style.transition = 'opacity 0.3s ease';
   canvas.style.pointerEvents = 'none';
   canvas.setAttribute('aria-hidden', 'true');
+  // Mirror the image's own stacking layer (e.g. the hero background sits at
+  // a negative z-index behind the hero's text) so the overlay lines up with
+  // it instead of defaulting to auto and popping above other content.
+  var imgZIndex = getComputedStyle(imgEl).zIndex;
+  if (imgZIndex !== 'auto') canvas.style.zIndex = imgZIndex;
 
   var texture = new Texture(gl);
   var geometry = new Triangle(gl);
@@ -80,9 +82,18 @@ function initLensWarp(imgEl, opts) {
 
   var imageIsReady = false;
   function resize() {
-    var rect = wrapper.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    renderer.setSize(rect.width, rect.height);
+    // Position/size the canvas to match the <img>'s own rendered box, not
+    // the wrapper's — the wrapper can be wider (e.g. padding, or centering
+    // a narrower image), which previously stretched the overlay past the
+    // actual photo.
+    var wrapperRect = wrapper.getBoundingClientRect();
+    var imgRect = imgEl.getBoundingClientRect();
+    if (imgRect.width === 0 || imgRect.height === 0) return;
+    canvas.style.left = (imgRect.left - wrapperRect.left) + 'px';
+    canvas.style.top = (imgRect.top - wrapperRect.top) + 'px';
+    canvas.style.width = imgRect.width + 'px';
+    canvas.style.height = imgRect.height + 'px';
+    renderer.setSize(imgRect.width, imgRect.height);
     if (imageIsReady) renderer.render({ scene: mesh });
   }
   window.addEventListener('resize', resize);
@@ -128,13 +139,16 @@ function initLensWarp(imgEl, opts) {
   }
 
   wrapper.addEventListener('mouseenter', function () {
+    // Re-sync position/size first — the image may have moved or scaled
+    // (e.g. a scroll-driven transform) since the last window resize.
+    resize();
     targetHover = 1;
     canvas.style.opacity = '1';
     startLoop();
   });
 
   wrapper.addEventListener('mousemove', function (e) {
-    var rect = wrapper.getBoundingClientRect();
+    var rect = canvas.getBoundingClientRect();
     targetMouse[0] = (e.clientX - rect.left) / rect.width;
     targetMouse[1] = 1.0 - (e.clientY - rect.top) / rect.height;
   });
@@ -148,7 +162,13 @@ function initLensWarp(imgEl, opts) {
 
 var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!prefersReducedMotion) {
-  document.querySelectorAll('.showcase .slider__item img').forEach(function (img) {
+  var lensWarpTargets = [
+    '.hero__bg',
+    '.showcase .slider__item img',
+    '.features .feature-card img',
+    '.commission__image img'
+  ].join(', ');
+  document.querySelectorAll(lensWarpTargets).forEach(function (img) {
     initLensWarp(img);
   });
 }

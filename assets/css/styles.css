@@ -585,6 +585,7 @@ h4 {
 .slider__item {
   flex: 0 0 auto;
   height: clamp(280px, 34vw, 596px);
+  position: relative;
 }
 
 .slider__item img { height: 100%; width: auto; max-width: none; border-radius: 4px; }

@@ -56,25 +56,14 @@
     window.addEventListener('resize', updateThumb);
     updateThumb();
 
-    // Drag-to-scroll on the image track, with eased following
+    // Drag-to-scroll on the image track, tracking the pointer 1:1 so it
+    // feels like the image is being grabbed — an eased/lagged follow reads
+    // fine with a slow deliberate mouse drag, but on a short, fast touch
+    // gesture it visibly lags behind the finger instead of tracking it.
     var dragging = false;
     var dragStartX = 0;
     var dragStartScroll = 0;
     var dragMoved = false;
-    var targetScroll = 0;
-    var easeRAF = null;
-
-    function easeToTarget() {
-      var current = track.scrollLeft;
-      var diff = targetScroll - current;
-      if (Math.abs(diff) < 0.5) {
-        track.scrollLeft = targetScroll;
-        easeRAF = null;
-        return;
-      }
-      track.scrollLeft = current + diff * 0.25;
-      easeRAF = requestAnimationFrame(easeToTarget);
-    }
 
     track.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -82,7 +71,6 @@
       dragMoved = false;
       dragStartX = e.clientX;
       dragStartScroll = track.scrollLeft;
-      targetScroll = track.scrollLeft;
       track.classList.add('is-dragging');
       try { track.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -92,8 +80,7 @@
       var dx = e.clientX - dragStartX;
       if (Math.abs(dx) > 3) dragMoved = true;
       var maxScroll = track.scrollWidth - track.clientWidth;
-      targetScroll = Math.min(maxScroll, Math.max(0, dragStartScroll - dx));
-      if (!easeRAF) easeRAF = requestAnimationFrame(easeToTarget);
+      track.scrollLeft = Math.min(maxScroll, Math.max(0, dragStartScroll - dx));
     });
 
     function endTrackDrag() {

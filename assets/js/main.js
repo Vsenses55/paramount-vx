@@ -57,16 +57,18 @@
     updateThumb();
 
     // Drag-to-scroll on the image track, tracking the pointer 1:1 so it
-    // feels like the image is being grabbed — an eased/lagged follow reads
-    // fine with a slow deliberate mouse drag, but on a short, fast touch
-    // gesture it visibly lags behind the finger instead of tracking it.
+    // feels like the image is being grabbed.
     var dragging = false;
     var dragStartX = 0;
     var dragStartScroll = 0;
     var dragMoved = false;
 
+    // Mouse only — Pointer Events cover mouse reliably. Touch is handled
+    // separately below with raw Touch Events: iOS Safari/Chrome (both
+    // WebKit) have proven unreliable combining pointer capture + touch-action
+    // for a custom horizontal drag, so touch gets its own, more defensive path.
     track.addEventListener('pointerdown', function (e) {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
       dragging = true;
       dragMoved = false;
       dragStartX = e.clientX;
@@ -76,7 +78,7 @@
     });
 
     track.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
+      if (!dragging || e.pointerType !== 'mouse') return;
       var dx = e.clientX - dragStartX;
       if (Math.abs(dx) > 3) dragMoved = true;
       var maxScroll = track.scrollWidth - track.clientWidth;
@@ -97,6 +99,55 @@
     window.addEventListener('pointerup', endTrackDrag);
     window.addEventListener('pointercancel', endTrackDrag);
     window.addEventListener('blur', endTrackDrag);
+
+    // Touch — direction-locked: wait until a touch has moved enough to tell
+    // whether it's a horizontal swipe (drag the slider) or vertical
+    // (scroll the page), only then commit and preventDefault. Deciding
+    // late like this is what lets the same finger-down either scroll the
+    // page or drag the slider depending on which way it actually moves.
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var touchStartScroll = 0;
+    var touching = false;
+    var touchIntent = null; // null (undecided) | 'horizontal' | 'vertical'
+
+    track.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      touching = true;
+      dragMoved = false;
+      touchIntent = null;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartScroll = track.scrollLeft;
+    }, { passive: true });
+
+    track.addEventListener('touchmove', function (e) {
+      if (!touching) return;
+      var touch = e.touches[0];
+      var dx = touch.clientX - touchStartX;
+      var dy = touch.clientY - touchStartY;
+
+      if (touchIntent === null) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        touchIntent = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical';
+        if (touchIntent === 'horizontal') track.classList.add('is-dragging');
+      }
+      if (touchIntent !== 'horizontal') return; // let the page scroll normally
+
+      e.preventDefault();
+      dragMoved = true;
+      var maxScroll = track.scrollWidth - track.clientWidth;
+      track.scrollLeft = Math.min(maxScroll, Math.max(0, touchStartScroll - dx));
+    }, { passive: false });
+
+    function endTouchDrag() {
+      touching = false;
+      touchIntent = null;
+      track.classList.remove('is-dragging');
+      if (dragHint) dragHint.classList.remove('is-dragging');
+    }
+    track.addEventListener('touchend', endTouchDrag);
+    track.addEventListener('touchcancel', endTouchDrag);
 
     track.querySelectorAll('img').forEach(function (img) {
       img.addEventListener('dragstart', function (e) { e.preventDefault(); });

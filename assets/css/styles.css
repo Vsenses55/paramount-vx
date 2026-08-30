@@ -531,6 +531,10 @@ h4 {
 
 .slider__viewport {
   position: relative;
+  /* Clips the track, which is no longer a native scroll container itself
+     (see .slider__track) — this is what keeps it from spilling past the
+     section's edges. */
+  overflow: hidden;
 }
 
 .slider__drag-hint {
@@ -562,20 +566,17 @@ h4 {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
   padding-bottom: 4px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
-  /* Without this, iOS Safari claims a horizontal finger-drag as its own
-     native scroll gesture and fires pointercancel before our drag-to-scroll
-     JS ever gets a chance to run. pan-y still lets vertical page scroll
-     (e.g. starting a drag slightly off-axis) pass through normally. */
+  /* Position comes entirely from a JS-driven transform now (see main.js) —
+     not native scrolling, which is what let iOS's own scroll physics fight
+     our drag handling. pan-y is kept as a hint so a vertical-intent touch
+     that starts here is never mistaken for a horizontal one. */
   touch-action: pan-y;
+  will-change: transform;
 }
-
-.slider__track::-webkit-scrollbar { display: none; }
 
 .slider__track img {
   /* Stops iOS's long-press "save photo" callout from interrupting a drag. */

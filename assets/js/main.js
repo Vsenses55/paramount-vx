@@ -42,19 +42,38 @@
     var track = slider.querySelector('[data-slider-track]');
     var thumb = slider.querySelector('[data-scrub]');
     var scrubTrack = slider.querySelector('.scrub-track');
-    if (!track || !thumb) return;
+    var viewport = slider.querySelector('.slider__viewport');
+    var dragHint = slider.querySelector('[data-drag-hint]');
+    if (!track || !thumb || !viewport) return;
+
+    // Position is driven entirely by a JS-tracked offset + CSS transform,
+    // not native scrollLeft. iOS repeatedly fought a native-scroll-based
+    // drag (its own scroll physics and our JS writes competing for the same
+    // scrollLeft, however carefully touch-action/preventDefault were used).
+    // With the track just a plain non-scrolling element moved by transform,
+    // there's no native gesture left to fight in the first place.
+    var scrollX = 0;
+
+    function getMaxScroll() {
+      return Math.max(0, track.scrollWidth - viewport.clientWidth);
+    }
 
     function updateThumb() {
-      var scrollable = track.scrollWidth - track.clientWidth;
-      var ratio = scrollable > 0 ? track.scrollLeft / scrollable : 0;
+      var scrollable = getMaxScroll();
+      var ratio = scrollable > 0 ? scrollX / scrollable : 0;
       var trackWidth = scrubTrack ? scrubTrack.clientWidth : thumb.parentElement.clientWidth;
       var maxLeftPx = Math.max(0, trackWidth - thumb.offsetWidth);
       thumb.style.left = (ratio * maxLeftPx) + 'px';
     }
 
-    track.addEventListener('scroll', updateThumb, { passive: true });
-    window.addEventListener('resize', updateThumb);
-    updateThumb();
+    function setScroll(x) {
+      scrollX = Math.min(getMaxScroll(), Math.max(0, x));
+      track.style.transform = 'translateX(' + (-scrollX) + 'px)';
+      updateThumb();
+    }
+
+    window.addEventListener('resize', function () { setScroll(scrollX); });
+    setScroll(0);
 
     // Drag-to-scroll on the image track, tracking the pointer 1:1 so it
     // feels like the image is being grabbed.
@@ -64,15 +83,14 @@
     var dragMoved = false;
 
     // Mouse only — Pointer Events cover mouse reliably. Touch is handled
-    // separately below with raw Touch Events: iOS Safari/Chrome (both
-    // WebKit) have proven unreliable combining pointer capture + touch-action
-    // for a custom horizontal drag, so touch gets its own, more defensive path.
+    // separately below with raw Touch Events, which give more reliable,
+    // direct control over the gesture on iOS Safari/Chrome (both WebKit).
     track.addEventListener('pointerdown', function (e) {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
       dragging = true;
       dragMoved = false;
       dragStartX = e.clientX;
-      dragStartScroll = track.scrollLeft;
+      dragStartScroll = scrollX;
       track.classList.add('is-dragging');
       try { track.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -81,8 +99,7 @@
       if (!dragging || e.pointerType !== 'mouse') return;
       var dx = e.clientX - dragStartX;
       if (Math.abs(dx) > 3) dragMoved = true;
-      var maxScroll = track.scrollWidth - track.clientWidth;
-      track.scrollLeft = Math.min(maxScroll, Math.max(0, dragStartScroll - dx));
+      setScroll(dragStartScroll - dx);
     });
 
     function endTrackDrag() {
@@ -118,7 +135,7 @@
       touchIntent = null;
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
-      touchStartScroll = track.scrollLeft;
+      touchStartScroll = scrollX;
     }, { passive: true });
 
     track.addEventListener('touchmove', function (e) {
@@ -136,8 +153,7 @@
 
       e.preventDefault();
       dragMoved = true;
-      var maxScroll = track.scrollWidth - track.clientWidth;
-      track.scrollLeft = Math.min(maxScroll, Math.max(0, touchStartScroll - dx));
+      setScroll(touchStartScroll - dx);
     }, { passive: false });
 
     function endTouchDrag() {
@@ -157,9 +173,7 @@
     });
 
     // Drag hint: follows the cursor while hovering, shows a gripped state only while actually dragging
-    var viewport = slider.querySelector('.slider__viewport');
-    var dragHint = slider.querySelector('[data-drag-hint]');
-    if (viewport && dragHint) {
+    if (dragHint) {
       viewport.addEventListener('mouseenter', function () {
         dragHint.classList.add('is-visible');
       });

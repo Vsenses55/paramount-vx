@@ -36,6 +36,9 @@ body {
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* clip, not hidden: hidden turns <body> into a scroll container, which
+     stops position: sticky (the pinned platform preview) from sticking. */
+  overflow-x: clip;
 }
 
 .hero__aurora {
@@ -226,6 +229,14 @@ h4 {
   z-index: 30;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+
+/* Fades away while the platform preview is pinned, so it never sits on top of
+   the preview's own bottom-right controls. */
+body.demo-pinned .side-nav {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .side-nav__item {
@@ -653,19 +664,69 @@ h4 {
   }
 }
 
-.socialize__image {
-  padding: 0 clamp(24px, 14vw, 272px);
+/* Interactive platform preview. A tall "runway" holds a sticky, viewport-tall
+   stage: the frame grows toward full-screen as it scrolls in (driven by
+   main.js), stays pinned and interactive while the runway scrolls past, then
+   releases and the page continues as normal. */
+.socialize__demo {
+  position: relative;
+  /* One viewport for the pinned stage + the extra distance it stays locked. */
+  height: calc(100vh + 70vh);
 }
 
-.socialize__image img {
-  width: 100%;
-  /* Rendered width of this image at a 1920px desktop viewport — stop
-     growing past that on larger screens instead of continuing to scale up. */
-  max-width: 1372px;
-  display: block;
-  margin-inline: auto;
+.socialize__demo-stick {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nav-height, 87px) 24px 24px;
+}
+
+.socialize__demo-frame {
+  position: relative;
+  /* As close to full-screen as fits: limited by width, or by height minus the nav. */
+  width: min(100%, calc((100vh - var(--nav-height, 87px) - 48px) * 16 / 9));
+  aspect-ratio: 16 / 9;
   border-radius: 4px;
+  overflow: hidden;
+  transform-origin: 50% 50%;
+  transform: scale(0.74);
   will-change: transform;
+}
+
+.socialize__demo-poster,
+.socialize__demo-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.socialize__demo-poster { object-fit: cover; }
+
+.socialize__demo-iframe {
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  /* Only grabs the pointer once the stage is pinned (see main.js), so
+     scrolling past it on the way in never gets caught by the iframe. */
+  pointer-events: none;
+}
+
+.socialize__demo-iframe.is-loaded { opacity: 1; }
+.socialize__demo.is-active .socialize__demo-iframe { pointer-events: auto; }
+
+/* Tablet / mobile keep the plain image: no pin, no iframe. */
+@media (max-width: 1024px) {
+  .socialize__demo { height: auto; }
+  .socialize__demo-stick { position: static; height: auto; padding: 0 24px; }
+  .socialize__demo-frame { width: 100%; transform: none; }
+  .socialize__demo-iframe { display: none; }
 }
 
 /* ---------- Features ---------- */
@@ -959,6 +1020,7 @@ h4 {
     --header-gap: 12px;
   }
   .showcase__header, .socialize__header { padding: 0 20px; }
-  .socialize__image, .scrub-track { margin: 0; padding: 0 20px; }
+  .scrub-track { margin: 0; padding: 0 20px; }
+  .socialize__demo-stick { padding: 0 20px; }
   .footer { flex-direction: column; text-align: center; }
 }

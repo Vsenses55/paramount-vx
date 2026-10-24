@@ -248,36 +248,72 @@
     updateTrailerScale();
   }
 
-  var socializeImg = document.querySelector('.socialize__image img');
-  if (socializeImg) {
-    // Same idea as the trailer, inverted: starts smaller, rests at its
-    // normal (1x) size once centered, shrinks back as it scrolls away.
-    var SOCIALIZE_BASE_SCALE = 0.7;
-    var SOCIALIZE_MAX_SCALE = 1;
-    var socializeScaleTicking = false;
+  var demo = document.querySelector('[data-demo]');
+  var demoFrame = demo && demo.querySelector('[data-demo-frame]');
+  var demoIframe = demo && demo.querySelector('.socialize__demo-iframe');
+  if (demo && demoFrame && demoIframe) {
+    // Desktop only (tablet/mobile keep the plain poster image — see CSS).
+    var demoDesktop = window.matchMedia('(min-width: 1025px)');
+    var DEMO_START_SCALE = 0.74;
+    var demoLoaded = false;
+    var demoTicking = false;
 
-    function updateSocializeScale() {
-      socializeScaleTicking = false;
-      var rect = socializeImg.getBoundingClientRect();
-      var viewportCenter = window.innerHeight / 2;
-      var elementCenter = rect.top + rect.height / 2;
-      var distance = Math.abs(viewportCenter - elementCenter);
-      var maxDistance = window.innerHeight / 2 + rect.height / 2;
-      var proximity = maxDistance > 0 ? Math.max(0, 1 - distance / maxDistance) : 0;
-      var scale = SOCIALIZE_BASE_SCALE + (SOCIALIZE_MAX_SCALE - SOCIALIZE_BASE_SCALE) * proximity;
-      socializeImg.style.transform = 'scale(' + scale.toFixed(3) + ')';
+    function loadDemo() {
+      if (demoLoaded || !demoDesktop.matches) return;
+      demoLoaded = true;
+      demoIframe.addEventListener('load', function () {
+        demoIframe.classList.add('is-loaded');
+      });
+      demoIframe.src = demoIframe.getAttribute('data-src');
     }
 
-    function requestSocializeScaleUpdate() {
-      if (!socializeScaleTicking) {
-        socializeScaleTicking = true;
-        requestAnimationFrame(updateSocializeScale);
+    // Start fetching once it's within a screen of coming into view.
+    if ('IntersectionObserver' in window) {
+      var demoLoadObserver = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) {
+          loadDemo();
+          demoLoadObserver.disconnect();
+        }
+      }, { rootMargin: '100% 0px' });
+      demoLoadObserver.observe(demo);
+    } else {
+      loadDemo();
+    }
+
+    // The frame grows from DEMO_START_SCALE to full size as the stage scrolls
+    // up to its pinned position, then holds there (interactive) while the
+    // runway scrolls past.
+    function updateDemo() {
+      demoTicking = false;
+      if (!demoDesktop.matches) {
+        demoFrame.style.transform = '';
+        demo.classList.remove('is-active');
+        document.body.classList.remove('demo-pinned');
+        return;
+      }
+      var vh = window.innerHeight;
+      var top = demo.getBoundingClientRect().top;
+      var p = Math.min(1, Math.max(0, 1 - top / vh));
+      var eased = p * p * (3 - 2 * p); // smoothstep
+      var scale = DEMO_START_SCALE + (1 - DEMO_START_SCALE) * eased;
+      demoFrame.style.transform = 'scale(' + scale.toFixed(3) + ')';
+      // Pinned = fully grown and still within the locked stretch of the runway.
+      var pinned = p >= 0.98 && demo.getBoundingClientRect().bottom > vh * 0.999;
+      demo.classList.toggle('is-active', pinned);
+      document.body.classList.toggle('demo-pinned', pinned);
+    }
+
+    function requestDemoUpdate() {
+      if (!demoTicking) {
+        demoTicking = true;
+        requestAnimationFrame(updateDemo);
       }
     }
 
-    document.addEventListener('scroll', requestSocializeScaleUpdate, { passive: true });
-    window.addEventListener('resize', requestSocializeScaleUpdate);
-    updateSocializeScale();
+    document.addEventListener('scroll', requestDemoUpdate, { passive: true });
+    window.addEventListener('resize', requestDemoUpdate);
+    demoDesktop.addEventListener('change', function () { loadDemo(); requestDemoUpdate(); });
+    updateDemo();
   }
 
   var form = document.getElementById('demoForm');

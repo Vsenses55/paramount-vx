@@ -263,6 +263,8 @@
       demoLoaded = true;
       demoIframe.addEventListener('load', function () {
         demoIframe.classList.add('is-loaded');
+        // The live scene has taken over — drop the placeholder image.
+        demoFrame.classList.add('is-live');
       });
       demoIframe.src = demoIframe.getAttribute('data-src');
     }
@@ -292,13 +294,19 @@
         return;
       }
       var vh = window.innerHeight;
-      var top = demo.getBoundingClientRect().top;
-      var p = Math.min(1, Math.max(0, 1 - top / vh));
-      var eased = p * p * (3 - 2 * p); // smoothstep
-      var scale = DEMO_START_SCALE + (1 - DEMO_START_SCALE) * eased;
+      var rect = demo.getBoundingClientRect();
+      var smooth = function (t) { return t * t * (3 - 2 * t); };
+      // In: grows from DEMO_START_SCALE as the stage scrolls up to its pinned spot.
+      var p = Math.min(1, Math.max(0, 1 - rect.top / vh));
+      // Out: once the runway's end passes the bottom of the screen the stage
+      // is released and scrolls away — shrink back down over that stretch
+      // (finishing a little before it's fully gone so the shrink is visible).
+      var q = Math.min(1, Math.max(0, (1 - rect.bottom / vh) / 0.85));
+      var grow = smooth(p) * (1 - smooth(q));
+      var scale = DEMO_START_SCALE + (1 - DEMO_START_SCALE) * grow;
       demoFrame.style.transform = 'scale(' + scale.toFixed(3) + ')';
       // Pinned = fully grown and still within the locked stretch of the runway.
-      var pinned = p >= 0.98 && demo.getBoundingClientRect().bottom > vh * 0.999;
+      var pinned = p >= 0.98 && rect.bottom > vh * 0.999;
       demo.classList.toggle('is-active', pinned);
       document.body.classList.toggle('demo-pinned', pinned);
     }

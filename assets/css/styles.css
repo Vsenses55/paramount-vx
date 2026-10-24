@@ -706,7 +706,14 @@ body.demo-pinned .side-nav {
   display: block;
 }
 
-.socialize__demo-poster { object-fit: cover; }
+.socialize__demo-poster {
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+/* Once the live scene is up the placeholder image goes away entirely, so it
+   can never show through around the stage. */
+.socialize__demo-frame.is-live .socialize__demo-poster { opacity: 0; }
 
 .socialize__demo-iframe {
   border: 0;

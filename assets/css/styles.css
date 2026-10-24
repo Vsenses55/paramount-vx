@@ -711,6 +711,10 @@ body.demo-pinned .side-nav {
 .socialize__demo-iframe {
   border: 0;
   background: transparent;
+  /* The prototype declares color-scheme: dark. If the iframe element doesn't
+     match, the browser paints an opaque grey (#121212) canvas behind the
+     embedded page even though its own background is transparent. */
+  color-scheme: dark;
   opacity: 0;
   transition: opacity 0.6s ease;
   /* Only grabs the pointer once the stage is pinned (see main.js), so

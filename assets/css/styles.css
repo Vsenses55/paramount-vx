@@ -132,6 +132,19 @@ h4 {
   color: var(--white);
 }
 
+/* ---------- Cursor trail ---------- */
+/* Soft glow that follows the mouse and fades out behind it (assets/js/cursor-trail.js).
+   Above page content, below the nav / side nav / menu overlay; never intercepts clicks. */
+.cursor-trail {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
 /* ---------- Scroll reveal ---------- */
 [data-reveal] {
   opacity: 0;

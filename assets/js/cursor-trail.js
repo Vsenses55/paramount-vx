@@ -12,21 +12,22 @@
   var ctx = canvas.getContext('2d');
   if (!ctx) { canvas.remove(); return; }
 
-  // Same blue -> cyan -> purple as the menu icon.
-  var PALETTE = [[0, 104, 229], [0, 177, 246], [159, 22, 239]];
-  var FADE = 0.07;        // how much of the trail is erased each frame (higher = shorter trail)
-  var IDLE_CLEAR_MS = 1800; // after this long without movement, wipe the canvas clean
-  var MIN_RADIUS = 46;
-  var MAX_RADIUS = 110;
+  // Muted versions of the aurora's purples/blues, so the glow reads as part
+  // of the same light instead of a bright accent painted on top.
+  var PALETTE = [[96, 52, 176], [52, 104, 176], [128, 62, 182]];
+  var LIFE = 420;          // ms each piece of the trail lasts before it's gone
+  var MIN_RADIUS = 70;
+  var MAX_RADIUS = 130;
+  var BASE_ALPHA = 0.11;
+  var MAX_POINTS = 90;
 
   var width = 0;
   var height = 0;
+  var points = [];        // { x, y, r, rgb, born }
   var lastX = null;
   var lastY = null;
-  var lastMove = 0;
   var phase = 0;          // advances with distance travelled, to drift through the palette
   var rafId = null;
-  var dirty = false;      // true while there is anything drawn that still needs fading out
 
   function resize() {
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -35,7 +36,6 @@
     canvas.width = Math.round(width * dpr);
     canvas.height = Math.round(height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    dirty = false;
   }
   resize();
   window.addEventListener('resize', resize);
@@ -54,22 +54,10 @@
     ];
   }
 
-  function stamp(x, y, radius, rgb, alpha) {
-    var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    var c = rgb[0] + ',' + rgb[1] + ',' + rgb[2];
-    g.addColorStop(0, 'rgba(' + c + ',' + alpha + ')');
-    g.addColorStop(0.5, 'rgba(' + c + ',' + (alpha * 0.35) + ')');
-    g.addColorStop(1, 'rgba(' + c + ',0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
   function onMove(e) {
     var x = e.clientX;
     var y = e.clientY;
-    lastMove = performance.now();
+    var now = performance.now();
 
     if (lastX === null) { lastX = x; lastY = y; }
     var dx = x - lastX;
@@ -77,19 +65,22 @@
     var dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist > 0.5) {
-      // Faster movement = a bigger, slightly brighter smear.
-      var radius = Math.min(MAX_RADIUS, MIN_RADIUS + dist * 0.9);
-      var alpha = Math.min(0.34, 0.16 + dist * 0.004);
-      var step = Math.max(6, radius * 0.3);
-      var steps = Math.max(1, Math.ceil(dist / step));
-
-      ctx.globalCompositeOperation = 'lighter';
+      // Faster movement = a slightly bigger smear.
+      var radius = Math.min(MAX_RADIUS, MIN_RADIUS + dist * 0.8);
+      var step = Math.max(10, radius * 0.4);
+      var steps = Math.min(14, Math.max(1, Math.ceil(dist / step)));
       for (var i = 1; i <= steps; i++) {
         var t = i / steps;
-        phase += (dist / steps) * 0.0045;
-        stamp(lastX + dx * t, lastY + dy * t, radius, colorAt(phase), alpha);
+        phase += (dist / steps) * 0.004;
+        points.push({
+          x: lastX + dx * t,
+          y: lastY + dy * t,
+          r: radius,
+          rgb: colorAt(phase),
+          born: now
+        });
       }
-      dirty = true;
+      if (points.length > MAX_POINTS) points.splice(0, points.length - MAX_POINTS);
     }
 
     lastX = x;
@@ -98,20 +89,35 @@
   }
 
   function loop(now) {
-    // Erase a little of everything each frame, so the trail melts away.
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = 'rgba(0,0,0,' + FADE + ')';
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
+    ctx.globalCompositeOperation = 'lighter';
 
-    if (now - lastMove > IDLE_CLEAR_MS) {
-      // Fading by a fixed alpha never quite reaches zero on 8-bit pixels,
-      // which would leave a faint smudge behind — finish with a hard clear.
-      ctx.clearRect(0, 0, width, height);
-      dirty = false;
-      rafId = null;
-      return;
+    // Drop expired pieces, then draw what's left. Age sets both brightness and
+    // size, so the trail shrinks and dims away rather than hanging around.
+    points = points.filter(function (p) { return now - p.born < LIFE; });
+
+    for (var i = 0; i < points.length; i++) {
+      var p = points[i];
+      var life = 1 - (now - p.born) / LIFE;       // 1 -> 0
+      var a = BASE_ALPHA * life * life;
+      var r = p.r * (0.55 + 0.45 * life);
+      var c = p.rgb[0] + ',' + p.rgb[1] + ',' + p.rgb[2];
+      var g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+      g.addColorStop(0, 'rgba(' + c + ',' + a + ')');
+      g.addColorStop(0.55, 'rgba(' + c + ',' + (a * 0.4) + ')');
+      g.addColorStop(1, 'rgba(' + c + ',0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fill();
     }
-    rafId = requestAnimationFrame(loop);
+
+    if (points.length) {
+      rafId = requestAnimationFrame(loop);
+    } else {
+      rafId = null;
+      ctx.clearRect(0, 0, width, height);
+    }
   }
 
   document.addEventListener('pointermove', function (e) {

@@ -23,8 +23,8 @@
   --section-gap: 80px;
   /* Showcase heading-to-paragraph gap: Figma has this at 40px/24px/12px (desktop/tablet/mobile). */
   --header-gap: 40px;
-  /* Gap from the Commission copy down to the Request a Demo block beneath it. */
-  --commission-gap: 56px;
+  /* Space above the Request a Demo block, on top of the section above's own bottom padding. */
+  --demo-gap: 56px;
 }
 
 * { box-sizing: border-box; }
@@ -288,10 +288,17 @@ body.demo-pinned .side-nav {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--bg);
+  /* Soft aurora-coloured glows (same teal / deep blue / magenta as the hero
+     aurora) over the page background. */
+  background:
+    radial-gradient(ellipse 40% 44% at 86% 4%, rgba(40, 92, 128, 0.95) 0%, transparent 72%),
+    radial-gradient(ellipse 44% 48% at 66% 10%, rgba(22, 6, 122, 0.95) 0%, transparent 74%),
+    radial-gradient(ellipse 48% 42% at 58% 66%, rgba(128, 12, 138, 0.82) 0%, transparent 74%),
+    radial-gradient(ellipse 42% 42% at 20% 34%, rgba(20, 0, 62, 0.55) 0%, transparent 72%),
+    var(--bg);
   display: flex;
-  align-items: center;
   justify-content: center;
+  overflow-y: auto;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-16px);
@@ -331,43 +338,133 @@ body.demo-pinned .side-nav {
   transition-delay: 0.1s;
 }
 
+.menu-overlay__inner {
+  width: min(926px, 100% - 2 * var(--gutter));
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Clears the logo / close button row at the top. */
+  padding: clamp(96px, 11vh, 140px) 0 clamp(48px, 9.3vh, 100px);
+}
+
+/* Links + button sit centred in the space between the top row and the footer. */
+.menu-overlay__main {
+  margin-block: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .menu-overlay__list {
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.menu-overlay__list li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.menu-overlay__list li:last-child { border-bottom: 0; }
+
+.menu-overlay__list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: clamp(10px, 1.5vh, 16px) 0;
+  font-weight: 800;
+  font-size: clamp(24px, 2.4vw, 46px);
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--white);
+}
+
+.menu-overlay__arrow {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 16px;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Arrow slides back toward the label on hover. */
+.menu-overlay__list a:hover .menu-overlay__arrow,
+.menu-overlay__list a:focus-visible .menu-overlay__arrow {
+  transform: translateX(-14px);
+}
+
+/* The existing gradient-stroke button (see .btn-submit), as a link. The
+   wrapper carries the spacing and the fade-in, so the button keeps its own
+   hover transform / opacity untouched. */
+.menu-overlay__cta-wrap { margin-top: clamp(28px, 4.3vh, 46px); }
+
+.btn-submit.menu-overlay__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 60px;
+  white-space: nowrap;
+}
+
+.menu-overlay__foot {
   display: flex;
   flex-direction: column;
+  gap: 28px;
+  margin-top: clamp(32px, 6vh, 56px);
+}
+
+.menu-overlay__social {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
   align-items: center;
   gap: 24px;
 }
 
-.menu-overlay__list a {
-  font-weight: 700;
-  font-size: clamp(24px, 4vw, 40px);
-  text-transform: uppercase;
-  color: var(--muted);
-  transition: color 0.2s ease;
-}
-
-.menu-overlay__list a:hover {
+.menu-overlay__social button {
+  display: block;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   color: var(--white);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
 }
 
-.menu-overlay__list a.is-active {
-  color: var(--white);
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.menu-overlay__social button svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.menu-overlay__list li {
+/* Subtle: brighten, lift a touch and pick up a faint purple glow. */
+.menu-overlay__social button:hover,
+.menu-overlay__social button:focus-visible {
+  opacity: 1;
+  transform: translateY(-3px);
+  filter: drop-shadow(0 0 8px rgba(159, 22, 239, 0.65));
+}
+
+.menu-overlay__foot p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Items cascade in when the menu opens. */
+.menu-overlay__list li,
+.menu-overlay__cta-wrap,
+.menu-overlay__foot {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.menu-overlay.is-open .menu-overlay__list li {
+.menu-overlay.is-open .menu-overlay__list li,
+.menu-overlay.is-open .menu-overlay__cta-wrap,
+.menu-overlay.is-open .menu-overlay__foot {
   opacity: 1;
   transform: translateY(0);
 }
@@ -377,6 +474,8 @@ body.demo-pinned .side-nav {
 .menu-overlay.is-open .menu-overlay__list li:nth-child(3) { transition-delay: 0.25s; }
 .menu-overlay.is-open .menu-overlay__list li:nth-child(4) { transition-delay: 0.3s; }
 .menu-overlay.is-open .menu-overlay__list li:nth-child(5) { transition-delay: 0.35s; }
+.menu-overlay.is-open .menu-overlay__cta-wrap { transition-delay: 0.42s; }
+.menu-overlay.is-open .menu-overlay__foot { transition-delay: 0.5s; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -814,31 +913,9 @@ body.demo-pinned .side-nav {
   margin-top: 12px;
 }
 
-/* ---------- Commission ---------- */
-/* Just a heading + copy, sitting directly above the Request a Demo block on the
-   same centered column (same max-width as .demo's content), so the two read as
-   one group. The tight gap between them is --commission-gap (set on .demo). */
-.commission {
-  max-width: calc(1185px + 2 * var(--gutter));
-  margin-inline: auto;
-  padding: var(--section-pad-y) var(--gutter) 0;
-}
-
-/* Heading on one line and the copy running wide, using the same centered column
-   as the demo block below instead of a narrow 530px strip. The one-line heading
-   is only forced from 641px up: on phones it's wider than the screen, so it has
-   to wrap there. (Its natural width is ~15x its font size, which at every size
-   from 641px up fits inside the column.) */
-.commission .text-block { max-width: none; gap: 24px; }
-.commission .text-block p { max-width: 1000px; }
-
-@media (min-width: 641px) {
-  .commission h2 { white-space: nowrap; }
-}
-
 /* ---------- Demo ---------- */
 .demo {
-  padding: var(--commission-gap) var(--gutter) var(--section-pad-y);
+  padding: var(--demo-gap) var(--gutter) var(--section-pad-y);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -992,7 +1069,7 @@ body.demo-pinned .side-nav {
     --stories-pad-y: 60px;
     --section-gap: 40px;
     --header-gap: 24px;
-    --commission-gap: 40px;
+    --demo-gap: 40px;
   }
   .text-grid { grid-template-columns: 1fr; }
   .demo__copy,
@@ -1017,7 +1094,7 @@ body.demo-pinned .side-nav {
     --stories-pad-y: 36px;
     --section-gap: 24px;
     --header-gap: 12px;
-    --commission-gap: 32px;
+    --demo-gap: 32px;
   }
   .showcase__header, .socialize__header { padding: 0 20px; }
   .scrub-track { margin: 0; padding: 0 20px; }

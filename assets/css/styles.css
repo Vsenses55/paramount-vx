@@ -1040,7 +1040,8 @@ body.demo-pinned .side-nav {
   position: absolute;
   inset: 0;
   border-radius: 73px;
-  padding: 1px;
+  /* Outline thickness (the SUBMIT button and the menu's Request a Demo share this). */
+  padding: 2px;
   background: conic-gradient(from var(--btn-angle, 0deg), #9f16ef, #00b1f6, #9f16ef);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;

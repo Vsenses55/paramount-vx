@@ -82,6 +82,60 @@
     var dragStartScroll = 0;
     var dragMoved = false;
 
+    // Easing on release: the slider keeps gliding with the speed it had when
+    // you let go, and slows to a stop. Speed is measured from the last few
+    // drag moves (px of scroll per ms, smoothed so one jittery sample can't
+    // throw it); letting go after pausing means no glide at all.
+    var FRICTION = 0.945;       // fraction of speed kept each 60fps frame
+    var MAX_VELOCITY = 4;       // px/ms cap, so a wild flick can't fling it miles
+    var MIN_VELOCITY = 0.02;    // below this the glide has effectively stopped
+    var RESTED_MS = 90;         // paused this long before letting go = no glide
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var velocity = 0;
+    var lastMoveTime = 0;
+    var lastMoveScroll = 0;
+    var momentumRaf = null;
+
+    function stopMomentum() {
+      if (momentumRaf) { cancelAnimationFrame(momentumRaf); momentumRaf = null; }
+    }
+
+    // Call when a drag starts (a new touch/press also stops any glide in progress).
+    function beginDragTracking() {
+      stopMomentum();
+      velocity = 0;
+      lastMoveTime = performance.now();
+      lastMoveScroll = scrollX;
+    }
+
+    // Call after every drag move, once scrollX has been updated.
+    function trackDragVelocity() {
+      var now = performance.now();
+      var dt = now - lastMoveTime;
+      if (dt > 0) {
+        velocity = velocity * 0.6 + ((scrollX - lastMoveScroll) / dt) * 0.4;
+      }
+      lastMoveTime = now;
+      lastMoveScroll = scrollX;
+    }
+
+    function releaseWithMomentum() {
+      if (reducedMotion || performance.now() - lastMoveTime > RESTED_MS) return;
+      var v = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocity));
+      if (Math.abs(v) < MIN_VELOCITY * 2) return;
+      var last = performance.now();
+      function frame(now) {
+        var dt = Math.min(now - last, 34);
+        last = now;
+        setScroll(scrollX + v * dt);
+        v *= Math.pow(FRICTION, dt / 16.67);
+        var atEdge = (scrollX <= 0 && v < 0) || (scrollX >= getMaxScroll() && v > 0);
+        if (Math.abs(v) < MIN_VELOCITY || atEdge) { momentumRaf = null; return; }
+        momentumRaf = requestAnimationFrame(frame);
+      }
+      momentumRaf = requestAnimationFrame(frame);
+    }
+
     // Mouse only — Pointer Events cover mouse reliably. Touch is handled
     // separately below with raw Touch Events, which give more reliable,
     // direct control over the gesture on iOS Safari/Chrome (both WebKit).
@@ -91,6 +145,7 @@
       dragMoved = false;
       dragStartX = e.clientX;
       dragStartScroll = scrollX;
+      beginDragTracking();
       track.classList.add('is-dragging');
       try { track.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -100,13 +155,16 @@
       var dx = e.clientX - dragStartX;
       if (Math.abs(dx) > 3) dragMoved = true;
       setScroll(dragStartScroll - dx);
+      trackDragVelocity();
     });
 
-    function endTrackDrag() {
+    function endTrackDrag(e) {
       if (!dragging) return;
       dragging = false;
       track.classList.remove('is-dragging');
       if (dragHint) dragHint.classList.remove('is-dragging');
+      // Only a real release glides on; a cancel / window blur just stops.
+      if (e && e.type === 'pointerup') releaseWithMomentum();
     }
     track.addEventListener('pointerup', endTrackDrag);
     track.addEventListener('pointercancel', endTrackDrag);
@@ -136,6 +194,7 @@
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touchStartScroll = scrollX;
+      beginDragTracking();
     }, { passive: true });
 
     track.addEventListener('touchmove', function (e) {
@@ -154,13 +213,18 @@
       e.preventDefault();
       dragMoved = true;
       setScroll(touchStartScroll - dx);
+      trackDragVelocity();
     }, { passive: false });
 
-    function endTouchDrag() {
+    function endTouchDrag(e) {
+      var wasHorizontalDrag = touching && touchIntent === 'horizontal';
       touching = false;
       touchIntent = null;
       track.classList.remove('is-dragging');
       if (dragHint) dragHint.classList.remove('is-dragging');
+      // Glide on after a real lift; a cancelled touch (e.g. the browser took
+      // over for a vertical page scroll) just stops.
+      if (wasHorizontalDrag && e && e.type === 'touchend') releaseWithMomentum();
     }
     track.addEventListener('touchend', endTouchDrag);
     track.addEventListener('touchcancel', endTouchDrag);

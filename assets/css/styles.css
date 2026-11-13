@@ -824,7 +824,17 @@ body.demo-pinned .side-nav {
   padding: var(--section-pad-y) var(--gutter) 0;
 }
 
-.commission .text-block { max-width: 530px; gap: 24px; }
+/* Heading on one line and the copy running wide, using the same centered column
+   as the demo block below instead of a narrow 530px strip. The one-line heading
+   is only forced from 641px up: on phones it's wider than the screen, so it has
+   to wrap there. (Its natural width is ~15x its font size, which at every size
+   from 641px up fits inside the column.) */
+.commission .text-block { max-width: none; gap: 24px; }
+.commission .text-block p { max-width: 1000px; }
+
+@media (min-width: 641px) {
+  .commission h2 { white-space: nowrap; }
+}
 
 /* ---------- Demo ---------- */
 .demo {

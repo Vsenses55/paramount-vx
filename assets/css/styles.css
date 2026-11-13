@@ -379,6 +379,28 @@ body.demo-pinned .side-nav {
   color: var(--white);
 }
 
+/* Word hover: the label eases a few px to the right (while the arrow slides
+   left, below) and the other links dim slightly, so the hovered one reads as
+   lit. The dimming is on the <a>, not the <li>, so it doesn't fight the
+   staggered fade-in on the list items. */
+.menu-overlay__list a {
+  transition: opacity 0.3s ease;
+}
+
+.menu-overlay__list a span {
+  display: block;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.menu-overlay__list a:hover span,
+.menu-overlay__list a:focus-visible span {
+  transform: translateX(8px);
+}
+
+.menu-overlay__list:hover a:not(:hover) {
+  opacity: 0.55;
+}
+
 .menu-overlay__arrow {
   flex: 0 0 auto;
   width: 30px;

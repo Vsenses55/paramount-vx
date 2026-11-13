@@ -23,6 +23,8 @@
   --section-gap: 80px;
   /* Showcase heading-to-paragraph gap: Figma has this at 40px/24px/12px (desktop/tablet/mobile). */
   --header-gap: 40px;
+  /* Gap from the Commission copy down to the Request a Demo block beneath it. */
+  --commission-gap: 56px;
 }
 
 * { box-sizing: border-box; }
@@ -813,42 +815,20 @@ body.demo-pinned .side-nav {
 }
 
 /* ---------- Commission ---------- */
+/* Just a heading + copy, sitting directly above the Request a Demo block on the
+   same centered column (same max-width as .demo's content), so the two read as
+   one group. The tight gap between them is --commission-gap (set on .demo). */
 .commission {
-  padding: var(--section-pad-y) var(--gutter);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 24px 80px;
+  max-width: calc(1185px + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--section-pad-y) var(--gutter) 0;
 }
 
-.commission__image { flex: 1 1 480px; }
-.commission__image img { width: 100%; border-radius: 4px; }
-
-.commission .text-block { flex: 1 1 400px; max-width: 530px; gap: 24px; }
-
-@media (min-width: 1025px) {
-  .commission__image {
-    max-width: 50%;
-  }
-}
-
-@media (min-width: 1921px) {
-  /* Freeze the section at its rendered size on a 1920px desktop instead of
-     continuing to scale up. 1676.4px is the flex row's content-box width
-     there (section width minus its own left/right gutter padding); adding
-     the gutter back via calc keeps that content width fixed regardless of
-     how wide the gutter itself grows, and everything inside (the image's
-     50%, the text-block's own fixed max-width) scales off this frozen
-     container, so it freezes automatically along with it. */
-  .commission {
-    max-width: calc(1676.4px + 2 * var(--gutter));
-    margin-inline: auto;
-  }
-}
+.commission .text-block { max-width: 530px; gap: 24px; }
 
 /* ---------- Demo ---------- */
 .demo {
-  padding: var(--section-pad-y) var(--gutter);
+  padding: var(--commission-gap) var(--gutter) var(--section-pad-y);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -1002,20 +982,13 @@ body.demo-pinned .side-nav {
     --stories-pad-y: 60px;
     --section-gap: 40px;
     --header-gap: 24px;
+    --commission-gap: 40px;
   }
   .text-grid { grid-template-columns: 1fr; }
   .demo__copy,
   .demo__form {
     flex: 1 1 100%;
     max-width: none;
-  }
-  .commission {
-    flex-direction: column;
-    row-gap: 40px;
-  }
-  .commission__image,
-  .commission .text-block {
-    flex: 0 1 auto;
   }
   .socialize__header {
     flex-direction: column;
@@ -1026,14 +999,6 @@ body.demo-pinned .side-nav {
   }
 }
 
-/* Tablet only: text-block is narrower than the image (max-width: 530px), so
-   centering (the default at <=1024px) leaves it inset from the image's left
-   edge. Left-align them instead. Mobile already matches without this since
-   the text-block fills the full width there. */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .commission { align-items: flex-start; }
-}
-
 @media (max-width: 640px) {
   :root {
     --hero-top-gap: 12px;
@@ -1042,6 +1007,7 @@ body.demo-pinned .side-nav {
     --stories-pad-y: 36px;
     --section-gap: 24px;
     --header-gap: 12px;
+    --commission-gap: 32px;
   }
   .showcase__header, .socialize__header { padding: 0 20px; }
   .scrub-track { margin: 0; padding: 0 20px; }

@@ -165,8 +165,7 @@ if (!prefersReducedMotion) {
   var lensWarpTargets = [
     '.hero__bg',
     '.showcase .slider__item img',
-    '.features .feature-card img',
-    '.commission__image img'
+    '.features .feature-card img'
   ].join(', ');
   document.querySelectorAll(lensWarpTargets).forEach(function (img) {
     initLensWarp(img);

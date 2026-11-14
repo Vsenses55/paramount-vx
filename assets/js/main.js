@@ -411,6 +411,35 @@
     };
     setNavHeightVar();
     window.addEventListener('resize', setNavHeightVar);
+
+    // Hide-on-scroll: the logo / Request a Demo / menu icon slide away while
+    // scrolling down and come back as soon as you scroll up (or are near the
+    // top of the page). Small deltas are ignored so jitter doesn't flicker it.
+    var lastNavY = window.pageYOffset || 0;
+    var navTicking = false;
+    var NAV_TOP_ZONE = 80;
+    var NAV_DELTA = 6;
+
+    var updateNavVisibility = function () {
+      navTicking = false;
+      var y = Math.max(0, window.pageYOffset || 0);
+      var dy = y - lastNavY;
+      if (y <= NAV_TOP_ZONE) {
+        nav.classList.remove('is-hidden');
+      } else if (Math.abs(dy) >= NAV_DELTA) {
+        // Keyboard users tabbing through the nav shouldn't lose it.
+        if (dy > 0 && !nav.contains(document.activeElement)) nav.classList.add('is-hidden');
+        else if (dy < 0) nav.classList.remove('is-hidden');
+      }
+      if (Math.abs(dy) >= NAV_DELTA || y <= NAV_TOP_ZONE) lastNavY = y;
+    };
+
+    window.addEventListener('scroll', function () {
+      if (navTicking) return;
+      navTicking = true;
+      window.requestAnimationFrame(updateNavVisibility);
+    }, { passive: true });
+    nav.addEventListener('focusin', function () { nav.classList.remove('is-hidden'); });
   }
 
   var sideNavItems = document.querySelectorAll('.side-nav__item');

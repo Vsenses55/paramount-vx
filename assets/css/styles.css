@@ -680,8 +680,18 @@ body.demo-pinned .side-nav {
   position: relative;
   /* Clips the track, which is no longer a native scroll container itself
      (see .slider__track) — this is what keeps it from spilling past the
-     section's edges. */
+     section's edges. Only the horizontal axis is clipped: the round drag
+     hint is centred on the cursor, so near the top/bottom edge half of it
+     sits outside the viewport and used to get cut off. See the @supports
+     block below; browsers without `overflow: clip` keep plain `hidden`. */
   overflow: hidden;
+}
+
+@supports (overflow: clip) {
+  .slider__viewport {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
 }
 
 .slider__drag-hint {
